@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "template-python"
+version = "0.1"
+description = "Template python repository."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.txt"}
+keywords = ["python"]
+authors = [{name = "Max"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+]
+dependencies = [
+    "black",
+    "isort",
+    "pytest",
+]
+
+[project.optional-dependencies]
+dev = ["check-manifest"]
+test = ["coverage"]
+[project.urls]
+"Source" = "https://github.com/max-models/template-python"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+template-python = "app.main:main"
