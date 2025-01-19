@@ -15,6 +15,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
 ]
 dependencies = [
+    "matplotlib",
     "black",
     "isort",
     "pytest",
@@ -29,5 +30,5 @@ test = ["coverage"]
 [tool.setuptools.packages.find]
 where = ["src"]
 
-# [project.scripts]
-# template-python = "maxtikzlib.main:main"
+[project.scripts]
+maxtikzlib = "maxtikzlib.figure:main"

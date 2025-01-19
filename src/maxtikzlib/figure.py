@@ -4,11 +4,9 @@ import subprocess
 import tempfile
 
 import matplotlib.patches as patches
-import numpy as np
-from matplotlib.image import imread
 
-from maxplotlib.colors.colors import Color
-from maxplotlib.linestyle.linestyle import Linestyle
+from maxtikzlib.color import Color
+from maxtikzlib.linestyle import Linestyle
 
 
 class Tikzlayer:
@@ -359,6 +357,7 @@ class TikzFigure:
             else:
                 print("PDF compilation failed. Please check the LaTeX log for details.")
 
+    # TODO: This should probably be removed and moved to maxplotlib instead
     def plot_matplotlib(self, ax):
         """
         Plot all nodes and paths on the provided axis using Matplotlib.
@@ -489,3 +488,24 @@ class TikzFigure:
         ax.set_xlim(min(all_x) - padding, max(all_x) + padding)
         ax.set_ylim(min(all_y) - padding, max(all_y) + padding)
         ax.set_aspect("equal", adjustable="datalim")
+
+
+def main():
+
+    tikz = TikzFigure()
+
+    path_actions = ["draw", "rounded corners", "line width=3"]
+
+    # M
+    nodes = [[0, 0], [0, 3], [1, 2], [2, 3], [2, 0]]
+    for i, node_data in enumerate(nodes):
+        tikz.add_node(node_data[0], node_data[1], f"M{i}", layer=0)
+    tikz.add_path(
+        [f"M{i}" for i in range(len(nodes))], path_actions=path_actions, layer=1
+    )
+
+    print(tikz.generate_standalone())
+
+
+if __name__ == "__main__":
+    main()

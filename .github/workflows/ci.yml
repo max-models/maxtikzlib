@@ -46,7 +46,7 @@ jobs:
       - name: Check installation
         run: |
           source env/bin/activate
-          template-python
+          maxtikzlib
 
       # Run tests
       - name: Run tests
