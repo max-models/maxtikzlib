@@ -3,9 +3,9 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "template-python"
+name = "maxtikzlib"
 version = "0.1"
-description = "Template python repository."
+description = "Python interface to generate (readable) Tikz figures."
 readme = "README.md"
 requires-python = ">=3.8"
 license = {file = "LICENSE.txt"}
@@ -24,10 +24,10 @@ dependencies = [
 dev = ["check-manifest"]
 test = ["coverage"]
 [project.urls]
-"Source" = "https://github.com/max-models/template-python"
+"Source" = "https://github.com/max-models/maxtikzlib"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[project.scripts]
-template-python = "app.main:main"
+# [project.scripts]
+# template-python = "maxtikzlib.main:main"
