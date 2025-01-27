@@ -199,8 +199,9 @@ class TikzFigure:
                 attributes_dict = dict(attr.split("=") for attr in attributes)
                 node_name = match_node.group(2)
                 coordinates = match_node.group(3)
-                coordinates = [float(c) for c in coordinates.split(",")]
-                coordinates = [float(c) for c in coordinates]
+                coordinates = [c for c in coordinates.split(",")]
+                coordinates = [c for c in coordinates]
+                coordinates = [c.lstrip().rstrip() for c in coordinates]
                 content = match_node.group(4)
                 # print(f"Attributes: {attributes_dict}")
                 # print(f"Node name: {node_name}")
