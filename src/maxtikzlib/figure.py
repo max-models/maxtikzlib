@@ -138,6 +138,7 @@ class TikzFigure:
         self._description = kwargs.get("description", None)
         self._label = kwargs.get("label", None)
         self._grid = kwargs.get("grid", False)
+        self._tikz_code = kwargs.get("tikz_code", None)
 
         # Initialize lists to hold Node and Path objects
         self.nodes = []
@@ -146,6 +147,100 @@ class TikzFigure:
 
         # Counter for unnamed nodes
         self._node_counter = 0
+
+        if self._tikz_code:
+            self.tikz_to_figure(self._tikz_code)
+
+    def tikz_to_figure(self, tikz_code):
+        # print(tikz_code)
+        lines = tikz_code.split("\n")
+        lines = [line.lstrip().rstrip() for line in lines]
+        lines = [line for line in lines if line not in ["", "\n"]]
+        lines = [line for line in lines if not line[0] == "%"]
+        assert lines[0] == "\\begin{tikzpicture}"
+        assert lines[-1] == "\\end{tikzpicture}"
+
+        current_layer = 0
+        for line in lines[1:-1]:
+            # print(line)
+
+            # Match \begin{pgfonlayer}{layer}
+            match_pgfdeclarelayer = re.search(r"\\pgfdeclarelayer\{(\d+)\}", line)
+            if match_pgfdeclarelayer:
+                layer = match_pgfdeclarelayer.group(1)
+                self.add_layer(layer)
+                # print(f"Layer number: {layer}")
+
+            # Match \begin{pgfonlayer}{layer}
+            match_begin_pgfonlayer = re.search(r"\\begin\{pgfonlayer\}\{(\d+)\}", line)
+            if match_begin_pgfonlayer:
+                current_layer = match_begin_pgfonlayer.group(1)
+                # print(f'Current layer: {current_layer}')
+
+            # Match \end{pgfonlayer}{layer}
+            match_end_pgfonlayer = re.search(r"\\end\{pgfonlayer\}\{(\d+)\}", line)
+            if match_end_pgfonlayer:
+                current_layer = 0
+                # print(f'Current layer: {current_layer}')
+
+            # Match \node[attributes] at (x,y) {content};
+            match_node = re.search(
+                r"\\node(?:\[([^\]]+)\])? \((\w+)\) at \(([^,]+, [^)]+)\) \{(.*)\};",
+                line,
+            )
+            if match_node:
+                attributes = match_node.group(1)
+                attributes = [
+                    attribute.lstrip().rstrip() for attribute in attributes.split(",")
+                ]
+                attributes = [
+                    attribute for attribute in attributes if not attribute == ""
+                ]
+                attributes_dict = dict(attr.split("=") for attr in attributes)
+                node_name = match_node.group(2)
+                coordinates = match_node.group(3)
+                coordinates = [float(c) for c in coordinates.split(",")]
+                coordinates = [float(c) for c in coordinates]
+                content = match_node.group(4)
+                # print(f"Attributes: {attributes_dict}")
+                # print(f"Node name: {node_name}")
+                # print(f"Coordinates: {coordinates}")
+                # print(f"Node text: '{node_text}'")
+                # print(coordinates.split(','))
+
+                self.add_node(
+                    coordinates[0],
+                    coordinates[1],
+                    node_name,
+                    layer=current_layer,
+                    content=content,
+                    **attributes_dict,
+                )
+
+            # Match \draw[attributes] (node1.center) to (node2.center) to (node2.center)...;
+            match_draw = re.search(
+                r"\\draw(?:\[([^\]]+)\])? ((?:\(\w+\.center\) to )+\(\w+\.center\));",
+                line,
+            )
+            if match_draw:
+                attributes = match_draw.group(1)
+                attributes = [
+                    attribute.lstrip().rstrip() for attribute in attributes.split(",")
+                ]
+                attributes = [
+                    attribute for attribute in attributes if not attribute == ""
+                ]
+                path = match_draw.group(2)
+                nodes = re.findall(r"\((\w+)\.center\)", path)
+
+                # print(f"Attributes: {attributes}")
+                # print(f"Path: {path}")
+                # print(f"Nodes: {nodes}")
+                self.add_path(nodes, path_actions=attributes, layer=current_layer)
+
+    def add_layer(self, layer):
+        if layer not in self.layers:
+            self.layers[layer] = Tikzlayer(layer)
 
     def add_node(self, x, y, label=None, content="", layer=0, **kwargs):
         """

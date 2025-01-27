@@ -31,4 +31,4 @@ test = ["coverage"]
 where = ["src"]
 
 [project.scripts]
-maxtikzlib = "maxtikzlib.figure:main"
+maxtikzlib = "maxtikzlib.console.main:main"
