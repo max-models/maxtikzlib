@@ -430,28 +430,27 @@ class TikzFigure:
             tex_file = os.path.join(tempdir, "figure.tex")
             with open(tex_file, "w") as f:
                 f.write(latex_document)
-
             # Run pdflatex
             try:
+                # Split the path
+                head_tail = os.path.split(os.path.abspath(filename))
+                output_directory = head_tail[0]
+                jobname = head_tail[1].replace('.pdf','')
+                cmd = ["pdflatex", "-interaction=nonstopmode", "-jobname", f"{jobname}", "-output-directory", f"{output_directory}", tex_file]
                 subprocess.run(
-                    ["pdflatex", "-interaction=nonstopmode", tex_file],
+                    cmd,
                     cwd=tempdir,
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                 )
+                # Remove .aux and .log files
+                os.remove(os.path.abspath(filename).replace('.pdf', '.aux'))
+                os.remove(os.path.abspath(filename).replace('.pdf', '.log'))
             except subprocess.CalledProcessError as e:
                 print("An error occurred while compiling the LaTeX document:")
                 print(e.stderr.decode())
                 return
-
-            # Move the output PDF to the desired location
-            pdf_output = os.path.join(tempdir, "figure.pdf")
-            if os.path.exists(pdf_output):
-                os.rename(pdf_output, filename)
-                print(f"PDF successfully compiled and saved as '{filename}'.")
-            else:
-                print("PDF compilation failed. Please check the LaTeX log for details.")
 
     # TODO: This should probably be removed and moved to maxplotlib instead
     def plot_matplotlib(self, ax):
