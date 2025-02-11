@@ -34,6 +34,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Install TeX Live with pdflatex
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-all
+
       # Create virtual environment and install project from pyproject.toml
       - name: Set up virtual environment and install project
         run: |
