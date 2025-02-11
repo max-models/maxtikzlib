@@ -435,8 +435,16 @@ class TikzFigure:
                 # Split the path
                 head_tail = os.path.split(os.path.abspath(filename))
                 output_directory = head_tail[0]
-                jobname = head_tail[1].replace('.pdf','')
-                cmd = ["pdflatex", "-interaction=nonstopmode", "-jobname", f"{jobname}", "-output-directory", f"{output_directory}", tex_file]
+                jobname = head_tail[1].replace(".pdf", "")
+                cmd = [
+                    "pdflatex",
+                    "-interaction=nonstopmode",
+                    "-jobname",
+                    f"{jobname}",
+                    "-output-directory",
+                    f"{output_directory}",
+                    tex_file,
+                ]
                 subprocess.run(
                     cmd,
                     cwd=tempdir,
@@ -445,8 +453,8 @@ class TikzFigure:
                     stderr=subprocess.PIPE,
                 )
                 # Remove .aux and .log files
-                os.remove(os.path.abspath(filename).replace('.pdf', '.aux'))
-                os.remove(os.path.abspath(filename).replace('.pdf', '.log'))
+                os.remove(os.path.abspath(filename).replace(".pdf", ".aux"))
+                os.remove(os.path.abspath(filename).replace(".pdf", ".log"))
             except subprocess.CalledProcessError as e:
                 print("An error occurred while compiling the LaTeX document:")
                 print(e.stderr.decode())
