@@ -1,5 +1,6 @@
-from maxtikzlib.figure import TikzFigure
 import numpy as np
+
+from maxtikzlib.figure import TikzFigure
 
 
 def generate_logo():
