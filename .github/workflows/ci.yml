@@ -33,11 +33,16 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
+      
       - name: Install TeX Live with pdflatex
         run: |
           sudo apt-get update
-          sudo apt-get install -y texlive-all
+          sudo apt-get install -y texlive texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-science
+
+      - name: Check if pdflatex is available
+        run: |
+          which pdflatex || echo "pdflatex NOT found!"
+          pdflatex --version || echo "pdflatex command failed!"
 
       # Create virtual environment and install project from pyproject.toml
       - name: Set up virtual environment and install project
