@@ -30,6 +30,8 @@ class Axis2D(TikzObject):
         ylabel: str = "",
         xlim: tuple[float, float] | None = None,
         ylim: tuple[float, float] | None = None,
+        xlog: bool = False,
+        ylog: bool = False,
         grid: bool | str = True,
         label: str = "",
         comment: str | None = None,
@@ -48,6 +50,8 @@ class Axis2D(TikzObject):
             ylabel: Label for y-axis. Defaults to "".
             xlim: (min, max) tuple for x-axis limits, or None for auto.
             ylim: (min, max) tuple for y-axis limits, or None for auto.
+            xlog: Whether to use logarithmic scaling on the x-axis.
+            ylog: Whether to use logarithmic scaling on the y-axis.
             grid: Enable grid lines. Pass ``True`` / ``False`` for the usual
                 pgfplots values or a string such as ``"major"``.
             label: Unique identifier (inherited from TikzObject).
@@ -74,11 +78,15 @@ class Axis2D(TikzObject):
         # Validate limits
         self._validate_limits(xlim, "xlim")
         self._validate_limits(ylim, "ylim")
+        self._validate_log_flag(xlog, "xlog")
+        self._validate_log_flag(ylog, "ylog")
 
         self._xlabel = xlabel
         self._ylabel = ylabel
         self._xlim = xlim
         self._ylim = ylim
+        self._xlog = xlog
+        self._ylog = ylog
         self._grid = grid
         self._width: str | None = self._normalize_dimension(width, "width")
         self._height: str | None = self._normalize_dimension(height, "height")
@@ -146,6 +154,11 @@ class Axis2D(TikzObject):
             if not all(isinstance(v, (int, float)) for v in limits):
                 raise ValueError(f"{name} values must be numeric, got {limits}")
 
+    @staticmethod
+    def _validate_log_flag(value: bool, name: str) -> None:
+        if not isinstance(value, bool):
+            raise TypeError(f"{name} must be a bool, got {type(value).__name__}")
+
     @property
     def xlabel(self) -> str:
         """X-axis label."""
@@ -165,6 +178,16 @@ class Axis2D(TikzObject):
     def ylim(self) -> tuple[float, float] | None:
         """Y-axis limits as (min, max) or None."""
         return self._ylim
+
+    @property
+    def xlog(self) -> bool:
+        """Whether the x-axis is logarithmic."""
+        return self._xlog
+
+    @property
+    def ylog(self) -> bool:
+        """Whether the y-axis is logarithmic."""
+        return self._ylog
 
     @property
     def grid(self) -> bool | str:
@@ -232,6 +255,16 @@ class Axis2D(TikzObject):
         """
         self._validate_limits((min_val, max_val), "ylim")
         self._ylim = (min_val, max_val)
+
+    def set_xlog(self, enabled: bool) -> None:
+        """Enable or disable logarithmic scaling on x-axis."""
+        self._validate_log_flag(enabled, "enabled")
+        self._xlog = enabled
+
+    def set_ylog(self, enabled: bool) -> None:
+        """Enable or disable logarithmic scaling on y-axis."""
+        self._validate_log_flag(enabled, "enabled")
+        self._ylog = enabled
 
     def set_grid(self, enabled: bool | str) -> None:
         """Set the pgfplots grid mode.
@@ -405,6 +438,10 @@ class Axis2D(TikzObject):
         if self._ylim is not None:
             axis_opts.append(f"ymin={self._ylim[0]}")
             axis_opts.append(f"ymax={self._ylim[1]}")
+        if self._xlog:
+            axis_opts.append("xmode=log")
+        if self._ylog:
+            axis_opts.append("ymode=log")
 
         # Add grid setting
         if isinstance(self._grid, str):
@@ -478,6 +515,8 @@ class Axis2D(TikzObject):
                 "ylabel": self._ylabel,
                 "xlim": self._xlim,
                 "ylim": self._ylim,
+                "xlog": self._xlog,
+                "ylog": self._ylog,
                 "grid": self._grid,
                 "width": self._width,
                 "height": self._height,
@@ -514,6 +553,8 @@ class Axis2D(TikzObject):
             ylabel=restored.get("ylabel", ""),
             xlim=restored.get("xlim"),
             ylim=restored.get("ylim"),
+            xlog=restored.get("xlog", False),
+            ylog=restored.get("ylog", False),
             grid=restored.get("grid", True),
             width=restored.get("width"),
             height=restored.get("height"),
