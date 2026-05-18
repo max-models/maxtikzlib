@@ -404,19 +404,21 @@ class TikzFigure(
                 "extra_packages": (
                     list(self._extra_packages) if self._extra_packages else None
                 ),
-                "tikz_libraries": list(self._tikz_libraries)
-                if self._tikz_libraries
-                else None,
-                "named_styles": [
-                    {
-                        "name": style_def["name"],
-                        "options": style_def["options"],
-                        "kwargs": style_def["kwargs"],
-                    }
-                    for style_def in self._named_styles
-                ]
-                if self._named_styles
-                else None,
+                "tikz_libraries": (
+                    list(self._tikz_libraries) if self._tikz_libraries else None
+                ),
+                "named_styles": (
+                    [
+                        {
+                            "name": style_def["name"],
+                            "options": style_def["options"],
+                            "kwargs": style_def["kwargs"],
+                        }
+                        for style_def in self._named_styles
+                    ]
+                    if self._named_styles
+                    else None
+                ),
                 "document_setup": self._document_setup,
                 "figure_setup": self._figure_setup,
                 "figsize": list(self._figsize),
@@ -2870,6 +2872,8 @@ class TikzFigure(
         ylabel: str = "",
         xlim: tuple[float, float] | None = None,
         ylim: tuple[float, float] | None = None,
+        xlog: bool = False,
+        ylog: bool = False,
         grid: bool | str = True,
         width: str | int | float | None = None,
         height: str | int | float | None = None,
@@ -2884,6 +2888,8 @@ class TikzFigure(
             ylabel: Label for y-axis. Defaults to "".
             xlim: (min, max) tuple for x-axis limits, or None for auto.
             ylim: (min, max) tuple for y-axis limits, or None for auto.
+            xlog: Whether to use logarithmic scaling on the x-axis.
+            ylog: Whether to use logarithmic scaling on the y-axis.
             grid: Enable grid lines. Pass ``True`` / ``False`` for the usual
                 pgfplots values or a string such as ``"major"``.
             width: Width of the axis as a string (e.g., "8cm"), number in cm,
@@ -2902,6 +2908,8 @@ class TikzFigure(
             ylabel=ylabel,
             xlim=xlim,
             ylim=ylim,
+            xlog=xlog,
+            ylog=ylog,
             grid=grid,
             width=width,
             height=height,

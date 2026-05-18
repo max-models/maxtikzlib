@@ -115,8 +115,7 @@ def _render_section(title: str, import_example: str, module_name: str) -> str:
 
 
 def build_api_page() -> str:
-    intro = textwrap.dedent(
-        """\
+    intro = textwrap.dedent("""\
         ---
         title: API Reference
         description: Generated reference for the current tikzfigure Python API.
@@ -129,8 +128,7 @@ def build_api_page() -> str:
         The sections below follow the current public API surface exported from
         `tikzfigure`, plus the underlying modules that define the main public
         classes.
-        """
-    ).strip()
+        """).strip()
 
     sections = [
         _render_section(title=title, import_example=import_example, module_name=module)

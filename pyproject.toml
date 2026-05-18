@@ -5,13 +5,13 @@ requires = [ "setuptools", "wheel" ]
 
 [project]
 name = "tikzfigure"
-version = "0.3.0"
+version = "0.3.1"
 description = "Python interface to generate (readable) Tikz figures."
 readme = "README.md"
 keywords = [ "python" ]
 license = { file = "LICENSE.txt" }
 authors = [ { name = "Max" } ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3 :: Only",

@@ -468,9 +468,9 @@ class Loop(FigurePathMixin, TikzObject):
                 "type": "Loop",
                 "variable": self._variable,
                 "values": list(self._values),
-                "range_spec": dict(self._range_spec)
-                if self._range_spec is not None
-                else None,
+                "range_spec": (
+                    dict(self._range_spec) if self._range_spec is not None else None
+                ),
                 "items": [item.to_dict() for item in self._items],
             }
         )

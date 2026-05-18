@@ -37,11 +37,13 @@ class Node(TikzObject):
 
     def __init__(
         self,
-        x: CoordinateValue
-        | CoordinateTuple2D
-        | CoordinateTuple3D
-        | TikzCoordinate
-        | None = None,
+        x: (
+            CoordinateValue
+            | CoordinateTuple2D
+            | CoordinateTuple3D
+            | TikzCoordinate
+            | None
+        ) = None,
         y: CoordinateValue | None = None,
         z: CoordinateValue | None = None,
         label: str = "",

@@ -163,7 +163,15 @@ class TestAxis2D:
         assert axis.ylabel == ""
         assert axis.xlim is None
         assert axis.ylim is None
+        assert axis.xlog is False
+        assert axis.ylog is False
         assert axis.grid is True
+
+    def test_axis2d_invalid_log_flags(self):
+        with pytest.raises(TypeError, match="xlog must be a bool"):
+            Axis2D(xlog="yes")  # type: ignore[arg-type]
+        with pytest.raises(TypeError, match="ylog must be a bool"):
+            Axis2D(ylog=1)  # type: ignore[arg-type]
 
     def test_axis2d_plots_list(self):
         """Test Axis2D has empty plots list on construction."""
@@ -214,6 +222,13 @@ class TestAxis2D:
         axis = Axis2D(grid=True)
         axis.set_grid(False)
         assert axis.grid is False
+
+    def test_axis2d_set_log_axes(self):
+        axis = Axis2D()
+        axis.set_xlog(True)
+        axis.set_ylog(True)
+        assert axis.xlog is True
+        assert axis.ylog is True
 
     def test_axis2d_set_ticks(self):
         """Test set_ticks method."""
@@ -345,6 +360,13 @@ class TestAxis2D:
         axis2.add_plot([0, 1], [0, 1])
         tikz_no_grid = axis2.to_tikz()
         assert "grid=false" in tikz_no_grid
+
+    def test_axis2d_to_tikz_with_log_axes(self):
+        axis = Axis2D(xlog=True, ylog=True)
+        axis.add_plot([1, 10, 100], [1, 10, 100])
+        tikz = axis.to_tikz()
+        assert "xmode=log" in tikz
+        assert "ymode=log" in tikz
 
     def test_axis2d_to_tikz_multiple_plots(self):
         """Test to_tikz with multiple plots."""
@@ -517,6 +539,12 @@ class TestAxis2DSerialization:
         assert d["width"] == "8cm"
         assert d["height"] == "6cm"
 
+    def test_axis2d_to_dict_with_log_axes(self):
+        axis = Axis2D(xlabel="X", ylabel="Y", xlog=True, ylog=False)
+        d = axis.to_dict()
+        assert d["xlog"] is True
+        assert d["ylog"] is False
+
     def test_axis2d_from_dict_with_dimensions(self):
         """Test that Axis2D.from_dict() restores width and height."""
         d = {
@@ -536,6 +564,26 @@ class TestAxis2DSerialization:
         axis = Axis2D.from_dict(d)
         assert axis.width == "8cm"
         assert axis.height == "6cm"
+
+    def test_axis2d_from_dict_with_log_axes(self):
+        d = {
+            "type": "Axis2D",
+            "xlabel": "X",
+            "ylabel": "Y",
+            "xlim": None,
+            "ylim": None,
+            "xlog": True,
+            "ylog": False,
+            "grid": True,
+            "plots": [],
+            "ticks": {},
+            "legend_pos": None,
+            "options": [],
+            "kwargs": {},
+        }
+        axis = Axis2D.from_dict(d)
+        assert axis.xlog is True
+        assert axis.ylog is False
 
     def test_axis2d_round_trip_with_dimensions(self):
         """Test that Axis2D serialization round-trip preserves dimensions."""
@@ -725,6 +773,12 @@ class TestTikzFigureAxis2D:
 
         assert ax.width == "8cm"
         assert ax.height == "6cm"
+
+    def test_tikzfigure_axis2d_with_log_axes(self):
+        fig = TikzFigure()
+        ax = fig.axis2d(xlabel="X", ylabel="Y", xlog=True, ylog=True)
+        assert ax.xlog is True
+        assert ax.ylog is True
 
 
 class TestTikzFigureSerialization:

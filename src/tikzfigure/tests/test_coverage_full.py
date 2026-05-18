@@ -742,11 +742,9 @@ def test_show_backends_and_errors(monkeypatch, capsys):
     monkeypatch.setattr(
         fig,
         "savefig",
-        lambda filename,
-        dpi=300,
-        verbose=False,
-        transparent=False,
-        use_web_compilation=False: (None),
+        lambda filename, dpi=300, verbose=False, transparent=False, use_web_compilation=False: (
+            None
+        ),
     )
 
     fig._show_matplotlib(dpi=72, verbose=True)
@@ -788,11 +786,9 @@ def test_show_backends_and_errors(monkeypatch, capsys):
     monkeypatch.setattr(
         fig,
         "savefig",
-        lambda filename,
-        dpi=300,
-        verbose=False,
-        transparent=False,
-        use_web_compilation=False: (None),
+        lambda filename, dpi=300, verbose=False, transparent=False, use_web_compilation=False: (
+            None
+        ),
     )
 
     fig._show_pillow(dpi=72, verbose=False)
