@@ -404,19 +404,21 @@ class TikzFigure(
                 "extra_packages": (
                     list(self._extra_packages) if self._extra_packages else None
                 ),
-                "tikz_libraries": list(self._tikz_libraries)
-                if self._tikz_libraries
-                else None,
-                "named_styles": [
-                    {
-                        "name": style_def["name"],
-                        "options": style_def["options"],
-                        "kwargs": style_def["kwargs"],
-                    }
-                    for style_def in self._named_styles
-                ]
-                if self._named_styles
-                else None,
+                "tikz_libraries": (
+                    list(self._tikz_libraries) if self._tikz_libraries else None
+                ),
+                "named_styles": (
+                    [
+                        {
+                            "name": style_def["name"],
+                            "options": style_def["options"],
+                            "kwargs": style_def["kwargs"],
+                        }
+                        for style_def in self._named_styles
+                    ]
+                    if self._named_styles
+                    else None
+                ),
                 "document_setup": self._document_setup,
                 "figure_setup": self._figure_setup,
                 "figsize": list(self._figsize),
