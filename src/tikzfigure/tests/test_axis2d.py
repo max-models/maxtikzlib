@@ -354,12 +354,12 @@ class TestAxis2D:
         axis = Axis2D(grid=True)
         axis.add_plot([0, 1], [0, 1])
         tikz_with_grid = axis.to_tikz()
-        assert "grid=true" in tikz_with_grid
+        assert "grid=major" in tikz_with_grid
 
         axis2 = Axis2D(grid=False)
         axis2.add_plot([0, 1], [0, 1])
         tikz_no_grid = axis2.to_tikz()
-        assert "grid=false" in tikz_no_grid
+        assert "grid=none" in tikz_no_grid
 
     def test_axis2d_to_tikz_with_log_axes(self):
         axis = Axis2D(xlog=True, ylog=True)
@@ -844,9 +844,10 @@ class TestSubfigures:
     def test_subfigure_axis_with_height(self):
         """Test that subfigure_axis() accepts height parameter."""
         fig = TikzFigure()
-        ax1 = fig.subfigure_axis(xlabel="X", width=0.45, height=4)
+        ax1 = fig.subfigure_axis(xlabel="X", width=0.45, axis_width=3, height=4)
         ax2 = fig.subfigure_axis(xlabel="Y", width=0.45, height=6)
 
+        assert ax1.width == "3cm"
         assert ax1.height == "4cm"
         assert ax2.height == "6cm"
 
@@ -971,15 +972,17 @@ class TestSubfigures:
         """Test that subfigure dimensions appear correctly in TikZ output."""
         fig = TikzFigure()
 
-        ax1 = fig.subfigure_axis(xlabel="Sin", width=0.45, height=4)
+        ax1 = fig.subfigure_axis(xlabel="Sin", width=0.45, axis_width=3, height=4)
         ax1.add_plot(func="sin(x)", label="sin(x)")
 
-        ax2 = fig.subfigure_axis(xlabel="Cos", width=0.45, height=5)
+        ax2 = fig.subfigure_axis(xlabel="Cos", width=0.45, axis_width="5cm", height=5)
         ax2.add_plot(func="cos(x)", label="cos(x)")
 
         tikz = fig.generate_tikz()
 
-        # Verify both subfigures have their heights in output
+        # Verify both subfigures keep explicit dimensions in groupplot output.
+        assert "width=3cm" in tikz
+        assert "width=5cm" in tikz
         assert "height=4cm" in tikz
         assert "height=5cm" in tikz
         assert "\\begin{groupplot}" in tikz
@@ -1103,7 +1106,7 @@ class TestAxis2DIntegration:
         assert "xmax=10" in tikz
         assert "ymin=-1" in tikz
         assert "ymax=1" in tikz
-        assert "grid=true" in tikz
+        assert "grid=major" in tikz
         assert "legend pos=north east" in tikz
 
         # Verify plots

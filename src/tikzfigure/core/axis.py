@@ -449,7 +449,7 @@ class Axis2D(TikzObject):
         if isinstance(self._grid, str):
             axis_opts.append(f"grid={self._grid}")
         else:
-            axis_opts.append(f"grid={'true' if self._grid else 'false'}")
+            axis_opts.append(f"grid={'major' if self._grid else 'none'}")
 
         # Add width and height if specified
         if self._width:
