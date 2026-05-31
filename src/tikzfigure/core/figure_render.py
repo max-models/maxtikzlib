@@ -16,6 +16,8 @@ TIKZFIGURE_HEADER = line_separator + version_string + link_string + line_separat
 
 
 class FigureRenderMixin:
+    GROUPPLOT_HORIZONTAL_SEP_CM: float
+    GROUPPLOT_VERTICAL_SEP_CM: float
     _extra_packages: list[str] | None
     _tikz_libraries: list[str]
     _named_styles: list[dict[str, Any]]
@@ -286,7 +288,10 @@ class FigureRenderMixin:
             else:
                 num_axes = len(self._subfigure_axes)
                 group_opts = (
-                    f"group style={{group size={num_axes} by 1, horizontal sep=1.5cm}}"
+                    "group style={"
+                    f"group size={num_axes} by 1, "
+                    f"horizontal sep={self.GROUPPLOT_HORIZONTAL_SEP_CM}cm"
+                    "}"
                 )
                 subfig_tikz += f"\\begin{{groupplot}}[{group_opts}]\n"
                 for item_tuple in self._subfigure_axes:
