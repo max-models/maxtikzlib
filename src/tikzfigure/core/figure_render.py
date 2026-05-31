@@ -16,6 +16,8 @@ TIKZFIGURE_HEADER = line_separator + version_string + link_string + line_separat
 
 
 class FigureRenderMixin:
+    GROUPPLOT_HORIZONTAL_SEP_CM: float
+    GROUPPLOT_VERTICAL_SEP_CM: float
     _extra_packages: list[str] | None
     _tikz_libraries: list[str]
     _named_styles: list[dict[str, Any]]
