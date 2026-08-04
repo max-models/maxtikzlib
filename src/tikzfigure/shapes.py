@@ -2,32 +2,17 @@ from __future__ import annotations
 
 from typing import TypeAlias
 
+from tikzfigure.core.tikz_token import TikzToken
 
-class TikzShape:
+
+class TikzShape(TikzToken):
     """A reusable TikZ node-shape specification."""
 
+    _attr = "shape_spec"
+    shape_spec: str
+
     def __init__(self, shape_spec: str) -> None:
-        if shape_spec == "":
-            raise ValueError("shape_spec must not be empty")
-        self.shape_spec = shape_spec
-
-    def to_tikz(self) -> str:
-        """Return the raw TikZ shape specification."""
-        return self.shape_spec
-
-    def __str__(self) -> str:
-        return self.shape_spec
-
-    def __repr__(self) -> str:
-        return f"TikzShape({self.shape_spec!r})"
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TikzShape):
-            return NotImplemented
-        return self.shape_spec == other.shape_spec
-
-    def __hash__(self) -> int:
-        return hash(self.shape_spec)
+        super().__init__(shape_spec)
 
 
 ShapeInput: TypeAlias = str | TikzShape
