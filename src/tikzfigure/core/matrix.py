@@ -8,9 +8,26 @@ from tikzfigure.core.coordinate import (
     TikzCoordinate,
 )
 from tikzfigure.core.serialization import deserialize_tikz_value, serialize_tikz_value
+from tikzfigure.core.tikz_library import TikzLibrary
 from tikzfigure.options import OptionInput, normalize_options
 
 MatrixCell = str | dict[str, Any] | None
+
+
+class MatrixLibrary(TikzLibrary):
+    """The ``matrix`` library, used to lay out a grid of nodes.
+
+    Owns the matrix library's node-naming convention, so
+    :class:`Matrix` and any other caller can derive a cell's TikZ node
+    name without duplicating the ``"<label>-<row>-<col>"`` format.
+    """
+
+    name = "matrix"
+
+    @staticmethod
+    def cell_name(label: str, row: int, col: int) -> str:
+        """Return the TikZ node name the matrix library assigns a cell."""
+        return f"{label}-{row}-{col}"
 
 
 class Matrix(TikzObject):
@@ -210,7 +227,7 @@ class Matrix(TikzObject):
                 f"Cell ({row}, {col}) is out of range for a "
                 f"{self.num_rows}x{self.num_cols} matrix."
             )
-        return f"{self.label}-{row}-{col}"
+        return MatrixLibrary.cell_name(self.label, row, col)
 
     @staticmethod
     def _cell_to_tikz(cell: MatrixCell) -> str:

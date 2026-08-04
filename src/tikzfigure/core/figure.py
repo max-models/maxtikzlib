@@ -20,7 +20,7 @@ from tikzfigure.core.grid import Grid
 from tikzfigure.core.layer import LayerCollection
 from tikzfigure.core.line import Line
 from tikzfigure.core.loop import Loop
-from tikzfigure.core.matrix import Matrix
+from tikzfigure.core.matrix import Matrix, MatrixLibrary
 from tikzfigure.core.node import Node
 from tikzfigure.core.parabola import Parabola
 from tikzfigure.core.path import TikzPath
@@ -33,10 +33,10 @@ from tikzfigure.core.scope import Scope
 from tikzfigure.core.serialization import deserialize_tikz_value, serialize_tikz_value
 from tikzfigure.core.spy import (
     Spy,
+    SpyLibrary,
     SpyScopeMode,
-    build_spy_command_parts,
-    build_spy_scope_parts,
 )
+from tikzfigure.core.tikz_library import TikzLibrary
 from tikzfigure.core.types import (
     _Align,
     _Anchor,
@@ -59,12 +59,26 @@ WEB_COMPILATION_ENV_VAR = "TIKZFIGURE_USE_WEB_COMPILATION"
 logger = logging.getLogger(__name__)
 
 
-def _normalize_tikz_libraries(*libraries: str) -> list[str]:
+def _coerce_tikz_library_name(
+    library: "str | TikzLibrary | type[TikzLibrary]",
+) -> str:
+    """Resolve a plain name, a TikzLibrary instance, or a TikzLibrary subclass."""
+    if isinstance(library, type) and issubclass(library, TikzLibrary):
+        return library.name
+    if isinstance(library, TikzLibrary):
+        return library.name
+    return library
+
+
+def _normalize_tikz_libraries(
+    *libraries: "str | TikzLibrary | type[TikzLibrary]",
+) -> list[str]:
     normalized: list[str] = []
     seen: set[str] = set()
 
     for raw_value in libraries:
-        for part in raw_value.split(","):
+        coerced = _coerce_tikz_library_name(raw_value)
+        for part in coerced.split(","):
             name = part.strip()
             if name == "":
                 raise ValueError("TikZ library names must not be empty.")
@@ -697,7 +711,7 @@ class TikzFigure(
 
     def _ensure_figure_spy_scope(self) -> None:
         """Ensure the figure loads the spy library and has a usable top-level scope."""
-        self.usetikzlibrary("spy")
+        SpyLibrary.ensure(self)
         if not self._figure_has_spy_scope():
             self._append_figure_setup_items(["spy scope"])
 
@@ -726,8 +740,8 @@ class TikzFigure(
         which is useful when several ``fig.spy(...)`` calls should share the
         same magnification, lens, node styling, or connection-path settings.
         """
-        self.usetikzlibrary("spy")
-        scope_options, scope_kwargs = build_spy_scope_parts(
+        SpyLibrary.ensure(self)
+        scope_options, scope_kwargs = SpyLibrary.build_scope_parts(
             mode=mode,
             options=options,
             magnification=magnification,
@@ -777,7 +791,7 @@ class TikzFigure(
         command works without extra setup.
         """
         self._ensure_figure_spy_scope()
-        spy_options, spy_kwargs = build_spy_command_parts(
+        spy_options, spy_kwargs = SpyLibrary.build_command_parts(
             options=options,
             magnification=magnification,
             lens=lens,
@@ -829,8 +843,8 @@ class TikzFigure(
         or when you want nested spy configurations such as an outer
         ``outlines`` scope with an inner ``overlays`` scope.
         """
-        self.usetikzlibrary("spy")
-        scope_options, scope_kwargs = build_spy_scope_parts(
+        SpyLibrary.ensure(self)
+        scope_options, scope_kwargs = SpyLibrary.build_scope_parts(
             mode=mode,
             options=options,
             magnification=magnification,
@@ -978,8 +992,18 @@ class TikzFigure(
     @overload
     def usetikzlibrary(self, *libraries: str) -> None: ...
 
-    def usetikzlibrary(self, *libraries: str) -> None:
+    @overload
+    def usetikzlibrary(self, *libraries: TikzLibrary | type[TikzLibrary]) -> None: ...
+
+    def usetikzlibrary(
+        self, *libraries: "str | TikzLibrary | type[TikzLibrary]"
+    ) -> None:
         """Register TikZ libraries for standalone output and compilation.
+
+        Accepts plain library name strings, or a :class:`TikzLibrary`
+        subclass/instance for libraries with dedicated Python support (e.g.
+        :class:`~tikzfigure.core.matrix.MatrixLibrary`,
+        :class:`~tikzfigure.core.spy.SpyLibrary`).
 
         Examples:
             >>> fig = TikzFigure()
@@ -2114,7 +2138,7 @@ class TikzFigure(
         Returns:
             The :class:`Matrix` object that was added.
         """
-        self.usetikzlibrary("matrix")
+        MatrixLibrary.ensure(self)
 
         if label is None:
             label = f"node{self._node_counter}"
