@@ -2,34 +2,18 @@ from __future__ import annotations
 
 from typing import TypeAlias
 
+from tikzfigure.core.tikz_token import TikzToken
 from tikzfigure.units import TikzDimension
 
 
-class TikzStyle:
+class TikzStyle(TikzToken):
     """A reusable TikZ style token or option fragment."""
 
+    _attr = "style_spec"
+    style_spec: str
+
     def __init__(self, style_spec: str) -> None:
-        if style_spec == "":
-            raise ValueError("style_spec must not be empty")
-        self.style_spec = style_spec
-
-    def to_tikz(self) -> str:
-        """Return the raw TikZ style fragment."""
-        return self.style_spec
-
-    def __str__(self) -> str:
-        return self.style_spec
-
-    def __repr__(self) -> str:
-        return f"TikzStyle({self.style_spec!r})"
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TikzStyle):
-            return NotImplemented
-        return self.style_spec == other.style_spec
-
-    def __hash__(self) -> int:
-        return hash(self.style_spec)
+        super().__init__(style_spec)
 
 
 StyleInput: TypeAlias = str | TikzStyle
