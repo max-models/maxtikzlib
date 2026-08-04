@@ -20,6 +20,7 @@ from tikzfigure.core.grid import Grid
 from tikzfigure.core.layer import LayerCollection
 from tikzfigure.core.line import Line
 from tikzfigure.core.loop import Loop
+from tikzfigure.core.matrix import Matrix
 from tikzfigure.core.node import Node
 from tikzfigure.core.parabola import Parabola
 from tikzfigure.core.path import TikzPath
@@ -569,10 +570,18 @@ class TikzFigure(
                     )
                 elif item_type == "Square":
                     fig.layers.add_item(Square.from_dict(item_data), layer=layer_label)
+                elif item_type == "Matrix":
+                    fig.layers.add_item(Matrix.from_dict(item_data), layer=layer_label)
 
         # Keep node counter consistent with restored nodes
+        matrix_labels = [
+            item_data.get("label", "")
+            for items_data in layers_data.values()
+            for item_data in items_data
+            if item_data.get("type") == "Matrix"
+        ]
         max_auto = -1
-        for label in node_lookup:
+        for label in list(node_lookup) + matrix_labels:
             if label.startswith("node"):
                 try:
                     max_auto = max(max_auto, int(label[4:]))
@@ -2032,6 +2041,104 @@ class TikzFigure(
 
         self.layers.add_item(item=rectangle, layer=layer, verbose=verbose)
         return rectangle
+
+    def add_matrix(
+        self,
+        rows: list[list[Any]],
+        x: (
+            float
+            | int
+            | str
+            | tuple[float | int | str, float | int | str]
+            | tuple[float | int | str, float | int | str, float | int | str]
+            | TikzCoordinate
+            | None
+        ) = None,
+        y: float | int | str | None = None,
+        z: float | int | str | None = None,
+        label: str | None = None,
+        layer: int = 0,
+        comment: str | None = None,
+        options: OptionInput | None = None,
+        row_sep: str | None = None,
+        column_sep: str | None = None,
+        cell_style: str | list[str] | None = None,
+        anchor: _Anchor = None,
+        verbose: bool = False,
+        **kwargs: Any,
+    ) -> Matrix:
+        """Add a matrix of nodes (``\\matrix``) to the TikZ figure.
+
+        A first-class alternative to hand-writing raw ``\\matrix`` TikZ,
+        with row/column separation, per-cell styling, and easy cell
+        addressing via :meth:`Matrix.cell`.
+
+        Examples::
+
+            m = fig.add_matrix(
+                [["A", "B"], ["C", "D"]],
+                label="m",
+                row_sep="5pt",
+                column_sep="1cm",
+                cell_style="draw, minimum size=8mm, anchor=center",
+            )
+            fig.add_coordinate("c11", at=m.cell(1, 1))
+            fig.add_coordinate("c22", at=m.cell(2, 2))
+            fig.draw(["c11", "c22"])
+
+        Args:
+            rows: Grid of cells, given row by row. Each cell is either a
+                plain string (node content), a dict of
+                ``{"content": str, "options": ..., **node_kwargs}`` for
+                per-cell styling, or ``None`` for an empty cell.
+            x: X-coordinate, a ``(x, y)`` / ``(x, y, z)`` tuple, or a
+                :class:`TikzCoordinate` giving the matrix's anchor
+                position. Use ``None`` to let TikZ place it at the origin.
+            y: Y-coordinate. Use ``None`` when ``x`` already provides the
+                full position.
+            z: Z-coordinate for 3-D figures.
+            label: Internal TikZ name. Auto-assigned when ``None``.
+                Required (explicitly or via auto-assignment) to address
+                individual cells with :meth:`Matrix.cell`.
+            layer: Target layer index. Defaults to ``0``.
+            comment: Optional comment prepended in the TikZ output.
+            options: Flag-style TikZ options for the matrix node itself.
+            row_sep: Row separation (e.g. ``"5pt"``).
+            column_sep: Column separation (e.g. ``"1cm"``).
+            cell_style: Shared TikZ style(s) applied to every cell node,
+                rendered as ``nodes={<cell_style>}``.
+            anchor: Anchor point for the whole matrix node.
+            verbose: If ``True``, print a debug message.
+            **kwargs: Additional matrix-level TikZ options.
+
+        Returns:
+            The :class:`Matrix` object that was added.
+        """
+        self.usetikzlibrary("matrix")
+
+        if label is None:
+            label = f"node{self._node_counter}"
+            self._node_counter += 1
+        else:
+            self._sync_node_counter_from_label(label)
+
+        matrix = Matrix(
+            rows=rows,
+            x=x,
+            y=y,
+            z=z,
+            label=label,
+            comment=comment,
+            layer=layer,
+            options=options,
+            row_sep=row_sep,
+            column_sep=column_sep,
+            cell_style=cell_style,
+            anchor=anchor,
+            **kwargs,
+        )
+        self.layers.add_item(item=matrix, layer=layer, verbose=verbose)
+        return matrix
 
     def ellipse(
         self,
