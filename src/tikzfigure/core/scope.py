@@ -15,9 +15,8 @@ from tikzfigure.core.raw import RawTikz
 from tikzfigure.core.serialization import deserialize_tikz_value, serialize_tikz_value
 from tikzfigure.core.spy import (
     Spy,
+    SpyLibrary,
     SpyScopeMode,
-    build_spy_command_parts,
-    build_spy_scope_parts,
 )
 from tikzfigure.options import OptionInput
 
@@ -253,7 +252,7 @@ class Scope(FigurePathMixin, TikzObject):
         """
         if self._library_loader is not None:
             self._library_loader("spy")
-        spy_options, spy_kwargs = build_spy_command_parts(
+        spy_options, spy_kwargs = SpyLibrary.build_command_parts(
             options=options,
             magnification=magnification,
             lens=lens,
@@ -306,7 +305,7 @@ class Scope(FigurePathMixin, TikzObject):
         """
         if self._library_loader is not None:
             self._library_loader("spy")
-        scope_options, scope_kwargs = build_spy_scope_parts(
+        scope_options, scope_kwargs = SpyLibrary.build_scope_parts(
             mode=mode,
             options=options,
             magnification=magnification,

@@ -11,7 +11,7 @@ from tikzfigure.core.coordinate import (
 )
 from tikzfigure.core.plot import Plot2D
 from tikzfigure.core.serialization import deserialize_tikz_value, serialize_tikz_value
-from tikzfigure.core.spy import Spy, build_spy_command_parts
+from tikzfigure.core.spy import Spy, SpyLibrary
 from tikzfigure.options import OptionInput
 
 
@@ -393,7 +393,7 @@ class Axis2D(TikzObject):
         if self._spy_scope_enabler is not None:
             self._spy_scope_enabler()
 
-        spy_options, spy_kwargs = build_spy_command_parts(
+        spy_options, spy_kwargs = SpyLibrary.build_command_parts(
             options=options,
             magnification=magnification,
             lens=lens,
