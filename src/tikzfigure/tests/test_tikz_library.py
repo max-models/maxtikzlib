@@ -3,7 +3,11 @@ import pytest
 from tikzfigure.core.figure import TikzFigure
 from tikzfigure.core.matrix import MatrixLibrary
 from tikzfigure.core.spy import SpyLibrary
-from tikzfigure.core.tikz_library import ArrowsMetaLibrary, TikzLibrary
+from tikzfigure.core.tikz_library import (
+    AnimationsLibrary,
+    ArrowsMetaLibrary,
+    TikzLibrary,
+)
 
 
 def test_subclassing_requires_name():
@@ -17,6 +21,7 @@ def test_subclass_registers_itself():
     assert TikzLibrary.registry["matrix"] is MatrixLibrary
     assert TikzLibrary.registry["spy"] is SpyLibrary
     assert TikzLibrary.registry["arrows.meta"] is ArrowsMetaLibrary
+    assert TikzLibrary.registry["animations"] is AnimationsLibrary
 
 
 def test_str_and_equality():
@@ -44,6 +49,13 @@ def test_usetikzlibrary_accepts_library_classes_and_instances():
     fig.usetikzlibrary(MatrixLibrary)
     fig.usetikzlibrary(SpyLibrary())
     assert fig.tikz_libraries == ["matrix", "spy"]
+
+
+def test_animations_library_ensure_registers_on_figure():
+    fig = TikzFigure()
+    AnimationsLibrary.ensure(fig)
+    assert "animations" in fig.tikz_libraries
+    assert AnimationsLibrary() == "animations"
 
 
 def test_add_matrix_and_spy_auto_register_via_library_classes():

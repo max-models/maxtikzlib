@@ -70,3 +70,16 @@ class ArrowsMetaLibrary(TikzLibrary):
     """The ``arrows.meta`` library, always loaded for standalone compilation."""
 
     name = "arrows.meta"
+
+
+class AnimationsLibrary(TikzLibrary):
+    """The ``animations`` library, for attribute/motion-path PDF animations.
+
+    TikZ's ``animations`` library drives per-attribute animations (e.g.
+    ``\\tikzset{<node>/.animate = {fill=red}}``) that get embedded as PDF
+    animations. tikzfigure has no dedicated object model for it yet -- call
+    ``AnimationsLibrary.ensure(fig)`` and use :meth:`TikzFigure.add_raw` for
+    the animation directives in the meantime.
+    """
+
+    name = "animations"

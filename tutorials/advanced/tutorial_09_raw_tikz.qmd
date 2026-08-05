@@ -12,7 +12,7 @@ then reference them in raw TikZ commands via `{node.label}`.
 
 This tutorial covers: - basic raw insertion - flowcharts with decision diamonds
 - mathematical annotations and axis drawing - network graphs with curved edges -
-timeline visualizations
+PDF animations - timeline visualizations
 
 ```{python}
 import math
@@ -216,6 +216,45 @@ fig.raw(
 
 fig.raw(
     "\\node[font=\\Large\\bfseries] at (0, 4.5) {Network Graph};",
+)
+
+fig.show()
+```
+
+{{< include includes/tikz_code_callout.qmd >}}
+
+## PDF animations (`animations` library)
+
+The `animations` library drives per-attribute animations (color changes,
+motion along a path, ...) that get embedded in the generated PDF and play
+back in a compatible viewer (e.g. Adobe Reader). tikzfigure has no dedicated
+object model for it yet, so register the library with `usetikzlibrary(...)`
+and write the `.animate = {...}` directive with `raw(...)`.
+
+```{python}
+fig = TikzFigure()
+fig.usetikzlibrary("animations")
+
+# Animate a node's fill color.
+traffic_light = fig.node(
+    (0, 0),
+    shape="circle",
+    fill="orange",
+    minimum_size="1cm",
+)
+fig.raw(
+    f"\\tikzset{{{traffic_light.label}/.animate = {{fill = {{red}}}}}}",
+)
+
+# Animate a node moving along a path (a translation over 2 seconds).
+ball = fig.node(
+    (0, -2.5),
+    shape="circle",
+    fill="blue!60",
+    minimum_size="0.8cm",
+)
+fig.raw(
+    f"\\tikzset{{{ball.label}/.animate = {{translate = {{{{(4,0)}}{{2s}}}}}}}}",
 )
 
 fig.show()
