@@ -16,6 +16,7 @@ from tikzfigure.core.figure_layout import FigureLayoutMixin
 from tikzfigure.core.figure_parsing import FigureParsingMixin
 from tikzfigure.core.figure_paths import FigurePathMixin
 from tikzfigure.core.figure_render import FigureRenderMixin
+from tikzfigure.core.fit import Fit, FitLibrary
 from tikzfigure.core.grid import Grid
 from tikzfigure.core.layer import LayerCollection
 from tikzfigure.core.line import Line
@@ -586,16 +587,19 @@ class TikzFigure(
                     fig.layers.add_item(Square.from_dict(item_data), layer=layer_label)
                 elif item_type == "Matrix":
                     fig.layers.add_item(Matrix.from_dict(item_data), layer=layer_label)
+                elif item_type == "Fit":
+                    fig.layers.add_item(Fit.from_dict(item_data), layer=layer_label)
 
         # Keep node counter consistent with restored nodes
-        matrix_labels = [
+        auto_labeled_types = {"Matrix", "Fit"}
+        auto_labels = [
             item_data.get("label", "")
             for items_data in layers_data.values()
             for item_data in items_data
-            if item_data.get("type") == "Matrix"
+            if item_data.get("type") in auto_labeled_types
         ]
         max_auto = -1
-        for label in list(node_lookup) + matrix_labels:
+        for label in list(node_lookup) + auto_labels:
             if label.startswith("node"):
                 try:
                     max_auto = max(max_auto, int(label[4:]))
@@ -2163,6 +2167,92 @@ class TikzFigure(
         )
         self.layers.add_item(item=matrix, layer=layer, verbose=verbose)
         return matrix
+
+    def add_fit(
+        self,
+        targets: list[Any],
+        content: str = "",
+        label: str | None = None,
+        layer: int = 0,
+        comment: str | None = None,
+        options: OptionInput | None = None,
+        verbose: bool = False,
+        **kwargs: Any,
+    ) -> Fit:
+        """Wrap existing nodes/coordinates in a bounding node (``fit`` library).
+
+        A first-class alternative to hand-writing raw ``fit=(...)...`` node
+        options.
+
+        Examples::
+
+            a = fig.add_node((0, 0), content="A")
+            b = fig.add_node((2, 1), content="B")
+            fig.add_fit([a, b], options=["draw", "dashed", "rounded corners"])
+
+        Args:
+            targets: Nodes/coordinates to fit around, as a list of
+                :class:`Node`/:class:`Coordinate` objects or label strings
+                (optionally with a ``.anchor`` suffix, e.g. ``"a.north"``).
+                At least one is required.
+            content: Text or LaTeX content displayed inside the fit node.
+                Usually left empty.
+            label: Internal TikZ name. Auto-assigned when ``None``.
+            layer: Target layer index. Defaults to ``0``.
+            comment: Optional comment prepended in the TikZ output.
+            options: Flag-style TikZ options (e.g. ``["draw", "dashed"]``).
+            verbose: If ``True``, print a debug message.
+            **kwargs: Additional TikZ options for the fit node (e.g.
+                ``inner_sep="5pt"``).
+
+        Returns:
+            The :class:`Fit` object that was added.
+        """
+        FitLibrary.ensure(self)
+
+        if not isinstance(targets, list):
+            raise ValueError("targets parameter must be a list of nodes/coordinates.")
+
+        resolved_targets: list[str] = []
+        for target in targets:
+            if isinstance(target, (Node, Coordinate)):
+                if not target.label:
+                    raise ValueError(
+                        "Fit targets must reference labeled nodes/coordinates."
+                    )
+                resolved_targets.append(target.label)
+            elif isinstance(target, str):
+                try:
+                    resolved_targets.append(self.layers.get_node(target).label or "")
+                except ValueError:
+                    if "." in target:
+                        label_part, _anchor_part = target.rsplit(".", 1)
+                        self.layers.get_node(label_part)
+                        resolved_targets.append(target)
+                    else:
+                        raise
+            else:
+                raise NotImplementedError(
+                    f"{target =}, {type(target) =} is not a valid fit target type!",
+                )
+
+        if label is None:
+            label = f"node{self._node_counter}"
+            self._node_counter += 1
+        else:
+            self._sync_node_counter_from_label(label)
+
+        fit = Fit(
+            targets=resolved_targets,
+            content=content,
+            label=label,
+            comment=comment,
+            layer=layer,
+            options=options,
+            **kwargs,
+        )
+        self.layers.add_item(item=fit, layer=layer, verbose=verbose)
+        return fit
 
     def ellipse(
         self,
