@@ -536,6 +536,57 @@ fig.show()
 
 {{< include includes/tikz_code_callout.qmd >}}
 
+## Fit boxes around nodes
+
+`add_fit()` wraps a group of existing nodes/coordinates in a single bounding
+node, using TikZ's `fit` library - handy for drawing a background box around
+related elements without hand-writing `fit=(...)...`. Pass the `Node`/
+`Coordinate` objects (or their label strings) to fit around.
+
+```{python}
+fig = TikzFigure()
+
+a = fig.node((0, 0), shape="circle", fill="blue!30", content="A")
+b = fig.node((3, 0), shape="circle", fill="blue!30", content="B")
+c = fig.node((1.5, 2), shape="circle", fill="blue!30", content="C")
+
+fig.add_fit(
+    [a, b, c],
+    options=["draw", "dashed", "rounded corners"],
+    inner_sep="0.4cm",
+)
+
+fig.show()
+```
+
+{{< include includes/tikz_code_callout.qmd >}}
+
+Fit nodes can be styled like any other node (`fill`, `color`, ...) and, since
+`add_fit()` returns a regular `Node`-like object, a title can be placed above
+it at an absolute coordinate:
+
+```{python}
+fig = TikzFigure()
+
+x = fig.node((0, 0), content="x")
+y = fig.node((2, 0), content="y")
+z = fig.node((1, 1.5), content="z")
+
+fig.add_fit(
+    [x, y, z],
+    label="group",
+    options=["draw"],
+    color="orange!60",
+    fill="orange!10",
+    inner_sep="0.3cm",
+)
+fig.node((1, 2.3), content="\\textbf{Group}", draw="none")
+
+fig.show()
+```
+
+{{< include includes/tikz_code_callout.qmd >}}
+
 ## Circle of nodes
 
 Placing many nodes evenly around a circle using a Python loop together with TikZ
