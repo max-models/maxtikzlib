@@ -25,7 +25,7 @@ plots.
 
 ```{python}
 from tikzfigure import TikzFigure, colors
-from tikzfigure.math import Var, cos, exp, func, ln, sin
+from tikzfigure.math import Var, cos, exp, func, ln, max, sin, sqrt
 ```
 
 ## A first sampled curve
@@ -341,3 +341,128 @@ This final figure uses the exact same ingredients as the earlier steps: declared
 functions, composable expressions, sampled plots, and loops. The result is a
 stylized tokamak X-point drawing with a separatrix-like structure, built
 entirely from plain TikZ plots.
+
+## A flux-surface-aligned curvilinear mesh
+
+The same API can also draw a mesh aligned to an X-point map.  The next example
+adds the patch layout with native `filldraw` and `grid` calls, then uses
+`parametric_grid(...)` to draw both coordinate families of the mapped mesh.
+
+```{python}
+def add_eight_patch_background(fig, radius=6, color="Azure4"):
+    patches = [
+        [(0, 0), (radius, 0), (radius, radius), (0, radius)],
+        [(0, 0), (-radius, 0), (-radius, radius), (0, radius)],
+        [(0, 0), (radius, 0), (radius, -radius), (0, -radius)],
+        [(0, 0), (-radius, 0), (-radius, -radius), (0, -radius)],
+        [(radius, 0), (2 * radius, 0), (2 * radius, radius), (radius, radius)],
+        [(-2 * radius, 0), (-radius, 0), (-radius, radius), (-2 * radius, radius)],
+        [(0, radius), (radius, radius), (radius, 2 * radius), (0, 2 * radius)],
+        [(0, -2 * radius), (radius, -2 * radius), (radius, -radius), (0, -radius)],
+    ]
+    for patch in patches:
+        fig.filldraw(
+            patch,
+            cycle=True,
+            fill=color,
+            fill_opacity=0.06,
+            draw=color,
+            draw_opacity=0.35,
+            line_width="0.4pt",
+        )
+
+
+fig = TikzFigure(figsize=(8, 8), figure_setup="external/optimize=false")
+add_eight_patch_background(fig)
+fig.grid((-6, -6), (6, 6), step="1", color=colors.Azure4, opacity=0.25)
+```
+
+The square-root map and the smooth blending function are declared once as PGF
+functions.  `Var` keeps the expressions symbolic until TikZ samples the plots.
+
+```{python}
+u = Var("u")
+v = Var("v")
+u_max = 6
+v_max = 6
+
+map_x = fig.function(
+    "map_x", ("u", "v"), sqrt(max(0, sqrt(u**2 + v**2) - u))
+)
+map_y = fig.function(
+    "map_y", ("u", "v"), sqrt(max(0, sqrt(u**2 + v**2) + u))
+)
+fig.function("smoothstep", "x", r"6*\x^5 - 15*\x^4 + 10*\x^3")
+fig.function(
+    "blend", "x",
+    r"ifthenelse(\x < 0, 0, ifthenelse(\x > 1, 1, smoothstep(\x)))",
+)
+fig.function("q", "x", r"blend(2*(\x - 0.4))")
+fig.function("alpha", ("u", "v"), r"q(\u) + q(\v) - q(\u)*q(\v)")
+
+map_x_oo, map_y_oo = 0, 0
+map_x_oi, map_y_oi = 0, sqrt(v_max)
+map_x_io, map_y_io = 0, sqrt(u_max * (sqrt(2) + 1))
+map_x_ii, map_y_ii = map_x(u_max, v_max), map_y(u_max, v_max)
+
+coons_x = fig.function(
+    "coons_x", ("u", "v"),
+    f"(1-\\u)*((1-\\v)*{map_x_oo} + \\v*{map_x_oi})"
+    f" + \\u*map_x({u_max}, \\v*{v_max})"
+    f" + (1-\\v)*((1-\\u)*{map_x_oo} + \\u*{map_x_io})"
+    f" + \\v*map_x(\\u*{u_max}, {v_max})"
+    f" - ((1-\\u)*(1-\\v)*{map_x_oo} + (1-\\u)*\\v*{map_x_oi}"
+    f" + \\u*(1-\\v)*{map_x_io} + \\u*\\v*{map_x_ii})",
+)
+coons_y = fig.function(
+    "coons_y", ("u", "v"),
+    f"(1-\\u)*((1-\\v)*{map_y_oo} + \\v*{map_y_oi})"
+    f" + \\u*map_y({u_max}, \\v*{v_max})"
+    f" + (1-\\v)*((1-\\u)*{map_y_oo} + \\u*{map_y_io})"
+    f" + \\v*map_y(\\u*{u_max}, {v_max})"
+    f" - ((1-\\u)*(1-\\v)*{map_y_oo} + (1-\\u)*\\v*{map_y_oi}"
+    f" + \\u*(1-\\v)*{map_y_io} + \\u*\\v*{map_y_ii})",
+)
+linear_x = fig.function(
+    "linear_x", ("u", "v"),
+    f"(1-alpha(\\u,\\v))*coons_x(\\u,\\v)"
+    f" + alpha(\\u,\\v)*map_x(\\u*{u_max}, \\v*{v_max})",
+)
+linear_y = fig.function(
+    "linear_y", ("u", "v"),
+    f"(1-alpha(\\u,\\v))*coons_y(\\u,\\v)"
+    f" + alpha(\\u,\\v)*map_y(\\u*{u_max}, \\v*{v_max})",
+)
+```
+
+`parametric_grid` emits one loop for fixed `u` values and one for fixed `v`
+values.  The outer sign loops reuse the first-quadrant map in all four sectors;
+the second call draws its coordinate-swapped counterpart.
+
+```{python}
+u_values = [i / 6 for i in range(7)]
+v_values = [i / 6 for i in range(7)]
+
+with fig.loop("sx", (-1, 1)) as sx:
+    with fig.loop("sy", (-1, 1)) as sy:
+        fig.parametric_grid(
+            sx * linear_x(u, v), sy * linear_y(u, v),
+            u_variable="u", v_variable="v",
+            u_values=u_values, v_values=v_values,
+            samples=18, smooth=True, options=[colors.Azure4],
+            line_width="0.7pt",
+        )
+        fig.parametric_grid(
+            sx * linear_y(u, v), sy * linear_x(u, v),
+            u_variable="u2", v_variable="v2",
+            u_values=u_values, v_values=v_values,
+            samples=18, smooth=True, options=[colors.Azure4],
+            line_width="0.7pt",
+        )
+
+fig.node((-2, 0.5), content=r"$\times$", text=colors.black)
+fig.node((-2, 0.0), content=r"$\bullet$", text=colors.Orange1)
+fig.show()
+```
+
+{{< include includes/tikz_code_callout.qmd >}}

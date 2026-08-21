@@ -1641,6 +1641,67 @@ class TikzFigure(
         self.layers.add_item(item=plot, layer=layer, verbose=verbose)
         return plot
 
+    def add_parametric_grid(
+        self,
+        x: Any,
+        y: Any,
+        *,
+        u_variable: str,
+        v_variable: str,
+        u_values: list[Any] | tuple[Any, ...] | range,
+        v_values: list[Any] | tuple[Any, ...] | range,
+        u_domain: tuple[Any, Any] | str = (0, 1),
+        v_domain: tuple[Any, Any] | str = (0, 1),
+        samples: int | None = None,
+        smooth: bool = False,
+        layer: int = 0,
+        comment: str | None = None,
+        verbose: bool = False,
+        options: OptionInput | None = None,
+        **kwargs: Any,
+    ) -> tuple[Loop, Loop]:
+        """Draw both coordinate families of a parametric quadrilateral grid.
+
+        ``x`` and ``y`` are expressions in ``u_variable`` and
+        ``v_variable``.  The first family fixes each value in ``u_values``
+        and samples ``v_variable``; the second fixes each value in
+        ``v_values`` and samples ``u_variable``.  This is useful for mapped
+        meshes, finite-element patches, and other curvilinear grids.
+
+        The variables should normally be created with :func:`Var`, for
+        example ``x = map_x(Var("u"), Var("v"))``.  The returned loops allow
+        callers to inspect or further customize the generated TikZ.
+        """
+        u_lines = self.loop(u_variable, u_values, layer=layer, comment=comment)
+        with u_lines as _u:
+            u_lines.plot(
+                x,
+                y,
+                variable=v_variable,
+                domain=v_domain,
+                samples=samples,
+                smooth=smooth,
+                options=options,
+                **kwargs,
+            )
+
+        v_lines = self.loop(v_variable, v_values, layer=layer)
+        with v_lines as _v:
+            v_lines.plot(
+                x,
+                y,
+                variable=u_variable,
+                domain=u_domain,
+                samples=samples,
+                smooth=smooth,
+                options=options,
+                **kwargs,
+            )
+
+        if verbose:
+            print("Added parametric grid")
+        return u_lines, v_lines
+
     def add_raw(
         self,
         tikz_code: str,
@@ -3289,6 +3350,7 @@ class TikzFigure(
     function = declare_function
     raw = add_raw
     plot = add_plot
+    parametric_grid = add_parametric_grid
     spy = add_spy
     spy_scope = add_spy_scope
     subfigure = FigureLayoutMixin.add_subfigure
