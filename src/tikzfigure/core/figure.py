@@ -17,6 +17,7 @@ from tikzfigure.core.figure_parsing import FigureParsingMixin
 from tikzfigure.core.figure_paths import FigurePathMixin
 from tikzfigure.core.figure_render import FigureRenderMixin
 from tikzfigure.core.fit import Fit, FitLibrary
+from tikzfigure.core.gantt import GanttChart
 from tikzfigure.core.grid import Grid
 from tikzfigure.core.layer import LayerCollection
 from tikzfigure.core.line import Line
@@ -589,6 +590,10 @@ class TikzFigure(
                     fig.layers.add_item(Matrix.from_dict(item_data), layer=layer_label)
                 elif item_type == "Fit":
                     fig.layers.add_item(Fit.from_dict(item_data), layer=layer_label)
+                elif item_type == "GanttChart":
+                    fig.layers.add_item(
+                        GanttChart.from_dict(item_data), layer=layer_label
+                    )
 
         # Keep node counter consistent with restored nodes
         auto_labeled_types = {"Matrix", "Fit"}
@@ -1729,6 +1734,41 @@ class TikzFigure(
             verbose=verbose,
         )
         return raw_tikz
+
+    def add_gantt_chart(
+        self,
+        start: int | str,
+        end: int | str,
+        rows: list[dict[str, Any]] | tuple[dict[str, Any], ...] = (),
+        layer: int = 0,
+        comment: str | None = None,
+        options: OptionInput | None = None,
+        verbose: bool = False,
+        **kwargs: Any,
+    ) -> GanttChart:
+        """Add a chart rendered by LaTeX's ``pgfgantt`` package.
+
+        Each row is a dictionary with ``type`` set to ``title``,
+        ``titlelist``, ``group``, ``bar``, ``milestone``, ``link``, or
+        ``raw``. For example: ``{"type": "bar", "content": "Build",
+        "start": 1, "end": 3}``.
+        """
+        self.add_package("pgfgantt")
+        chart = GanttChart(
+            start=start,
+            end=end,
+            rows=rows,
+            comment=comment,
+            layer=layer,
+            options=options,
+            **kwargs,
+        )
+        self.layers.add_item(item=chart, layer=layer, verbose=verbose)
+        return chart
+
+    add_gantt = add_gantt_chart
+    gantt = add_gantt_chart
+    gantt_chart = add_gantt_chart
 
     def arc(
         self,
