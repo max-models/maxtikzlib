@@ -1,5 +1,6 @@
 from tikzfigure.core.coordinate import TikzCoordinate, TikzVector
 from tikzfigure.core.figure import TikzFigure
+from tikzfigure.core.gantt import GanttChart
 from tikzfigure.core.node import Node
 
 from . import (
@@ -19,6 +20,7 @@ __all__ = [
     "Node",
     "TikzCoordinate",
     "TikzVector",
+    "GanttChart",
     "units",
     "colors",
     "patterns",
